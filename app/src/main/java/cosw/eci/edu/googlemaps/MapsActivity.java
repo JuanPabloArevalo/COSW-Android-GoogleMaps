@@ -1,18 +1,29 @@
 package cosw.eci.edu.googlemaps;
 
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.location.LocationServices;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
+    private GoogleApiClient googleApiClient;
+    private static final int ACCESS_LOCATION_PERMISSION_CODE = 10;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,6 +33,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+
     }
 
 
@@ -42,5 +55,53 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         LatLng sydney = new LatLng(-34, 151);
         mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+    }
+
+    @SuppressLint("MissingPermission")
+    public void showMyLocation() {
+        if ( mMap != null ) {
+            String[] permissions = { android.Manifest.permission.ACCESS_FINE_LOCATION,android.Manifest.permission.ACCESS_COARSE_LOCATION };
+            if ( hasPermissions( this, permissions ) ) {
+                mMap.setMyLocationEnabled( true );
+                Location lastLocation = LocationServices.FusedLocationApi.getLastLocation( googleApiClient );
+                if ( lastLocation != null ) {
+                    addMarkerAndZoom( lastLocation, "My Location", 15 );
+                }
+            }
+            else {
+                ActivityCompat.requestPermissions( this, permissions, ACCESS_LOCATION_PERMISSION_CODE );
+            }
+        }
+    }
+
+    public static boolean hasPermissions(Context context, String[] permissions ) {
+        for ( String permission : permissions ) {
+            if ( ContextCompat.checkSelfPermission( context, permission ) == PackageManager.PERMISSION_DENIED ) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public void addMarkerAndZoom( Location location, String title, int zoom  ) {
+        LatLng myLocation = new LatLng( location.getLatitude(), location.getLongitude() );
+        mMap.addMarker( new MarkerOptions().position( myLocation ).title( title ) );
+        mMap.moveCamera( CameraUpdateFactory.newLatLngZoom( myLocation, zoom ) );
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults ) {
+        for ( int grantResult : grantResults ) {
+            if ( grantResult == -1 ) {
+                return;
+            }
+        }
+        switch ( requestCode ) {
+            case ACCESS_LOCATION_PERMISSION_CODE:
+                showMyLocation();
+                break;
+            default:
+                super.onRequestPermissionsResult( requestCode, permissions, grantResults );
+        }
     }
 }
