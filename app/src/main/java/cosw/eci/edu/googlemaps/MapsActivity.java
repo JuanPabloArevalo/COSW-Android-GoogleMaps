@@ -2,15 +2,21 @@ package cosw.eci.edu.googlemaps;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
+import android.view.View;
 
+import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -19,11 +25,12 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.location.LocationServices;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
     private GoogleMap mMap;
     private GoogleApiClient googleApiClient;
     private static final int ACCESS_LOCATION_PERMISSION_CODE = 10;
+    private final LocationRequest locationRequest = new LocationRequest();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +40,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        //Configure Google Maps API Objects
+        googleApiClient = new GoogleApiClient.Builder( this ).addConnectionCallbacks( this ).addOnConnectionFailedListener( this ).addApi( LocationServices.API ).build();
+        locationRequest.setInterval( 10000 );
+        locationRequest.setFastestInterval( 5000 );
+        locationRequest.setPriority( LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY );
+        googleApiClient.connect();
 
 
     }
@@ -103,5 +117,38 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             default:
                 super.onRequestPermissionsResult( requestCode, permissions, grantResults );
         }
+    }
+
+    @SuppressLint("MissingPermission")
+    @Override
+    public void onConnected( @Nullable Bundle bundle ) {
+        LocationServices.FusedLocationApi.requestLocationUpdates( googleApiClient, locationRequest,
+                new LocationListener() {
+                    @Override
+                    public void onLocationChanged( Location location ) {
+                        showMyLocation();
+                        stopLocationUpdates();
+                    }
+                } );
+
+    }
+
+    @Override
+    public void onConnectionSuspended( int i ) {
+        stopLocationUpdates();
+    }
+
+    public void stopLocationUpdates() {
+        LocationServices.FusedLocationApi.removeLocationUpdates( googleApiClient, new LocationListener() {
+            @Override
+            public void onLocationChanged( Location location ){
+
+            }
+        } );
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        
     }
 }
