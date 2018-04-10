@@ -5,10 +5,13 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
@@ -28,6 +31,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.location.LocationServices;
 import android.support.v4.os.ResultReceiver;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
@@ -37,12 +41,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private static final int ACCESS_LOCATION_PERMISSION_CODE = 10;
     private final LocationRequest locationRequest = new LocationRequest();
     private TextView address;
+    public static final String EXTRA_MESSAGE = "com.eci.edu.googlrmaps.ADDFORM";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         address = (TextView) findViewById(R.id.address);
+
+
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -56,8 +64,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         locationRequest.setPriority( LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY );
         googleApiClient.connect();
 
-
     }
+
+    public void addNewLocation(View view) {
+        Intent intent = new Intent(this, AddFormLocation.class);
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(intent,1);
+    }
+
 
 
     /**
@@ -113,7 +127,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults ) {
-        System.out.print("ACA");
         for ( int grantResult : grantResults ) {
             if ( grantResult == -1 ) {
                 return;
@@ -192,6 +205,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             intent.putExtra( FetchAddressIntentService.RECEIVER, addressResultReceiver );
             intent.putExtra( FetchAddressIntentService.LOCATION_DATA_EXTRA, lastLocation );
             startService( intent );
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        Log.i("INFO", "ENTRO ACA");
+
+        if (resultCode == RESULT_OK) {
+            switch (requestCode) {
+                case 1:
+                    Log.i("INFO", "ENTRO ACA 444");
+
+            }
         }
     }
 }
