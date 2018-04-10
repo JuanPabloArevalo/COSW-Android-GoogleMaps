@@ -1,16 +1,19 @@
 package cosw.eci.edu.googlemaps;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.View;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -24,6 +27,8 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.location.LocationServices;
+import android.support.v4.os.ResultReceiver;
+import android.widget.TextView;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
@@ -31,11 +36,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private GoogleApiClient googleApiClient;
     private static final int ACCESS_LOCATION_PERMISSION_CODE = 10;
     private final LocationRequest locationRequest = new LocationRequest();
+    private TextView address;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+        address = (TextView) findViewById(R.id.address);
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -64,11 +72,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-
+        showMyLocation();
         // Add a marker in Sydney and move the camera
-        LatLng sydney = new LatLng(-34, 151);
+        /*LatLng sydney = new LatLng(-34, 151);
         mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));*/
     }
 
     @SuppressLint("MissingPermission")
@@ -79,7 +87,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 mMap.setMyLocationEnabled( true );
                 Location lastLocation = LocationServices.FusedLocationApi.getLastLocation( googleApiClient );
                 if ( lastLocation != null ) {
-                    addMarkerAndZoom( lastLocation, "My Location", 15 );
+                    addMarkerAndZoom( lastLocation, "My LocationForm", 15 );
                 }
             }
             else {
@@ -105,6 +113,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults ) {
+        System.out.print("ACA");
         for ( int grantResult : grantResults ) {
             if ( grantResult == -1 ) {
                 return;
@@ -150,5 +159,39 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
         
+    }
+
+    public static void requestPermissions(Activity activity, String[] permissions, int requestCode ) {
+        ActivityCompat.requestPermissions( activity, permissions, requestCode );
+    }
+
+    public void onFindAddressClicked( View view ) {
+        startFetchAddressIntentService();
+    }
+
+    @SuppressLint("MissingPermission")
+    public void startFetchAddressIntentService() {
+        Location lastLocation = LocationServices.FusedLocationApi.getLastLocation( googleApiClient );
+        if ( lastLocation != null ){
+            AddressResultReceiver addressResultReceiver = new AddressResultReceiver( new Handler() );
+            addressResultReceiver.setAddressResultListener( new AddressResultListener() {
+                @Override
+                public void onAddressFound( final String address ) {
+                    runOnUiThread( new Runnable() {
+                        @Override
+                        public void run() {
+                            MapsActivity.this.address.setText( address );
+                            MapsActivity.this.address.setVisibility( View.VISIBLE );
+                        }
+                    } );
+
+
+                }
+            } );
+            Intent intent = new Intent( this, FetchAddressIntentService.class );
+            intent.putExtra( FetchAddressIntentService.RECEIVER, addressResultReceiver );
+            intent.putExtra( FetchAddressIntentService.LOCATION_DATA_EXTRA, lastLocation );
+            startService( intent );
+        }
     }
 }
