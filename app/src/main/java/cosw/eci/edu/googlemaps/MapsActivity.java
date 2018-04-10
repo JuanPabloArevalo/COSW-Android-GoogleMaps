@@ -34,6 +34,8 @@ import android.support.v4.os.ResultReceiver;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import cosw.eci.edu.googlemaps.model.LocationForm;
+
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
     private GoogleMap mMap;
@@ -66,7 +68,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
-    public void addNewLocation(View view) {
+    public void addNewLocationForm(View view) {
         Intent intent = new Intent(this, AddFormLocation.class);
         startActivityForResult(intent,1);
     }
@@ -78,6 +80,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         if (resultCode == RESULT_OK) {
             switch (requestCode) {
                 case 1:
+                    LocationForm lf = (LocationForm) data.getExtras().get(AddFormLocation.LOCATION_FORM);
+                    addNewZone(lf);
+                    Log.i("INFO", lf.getName());
                     Log.i("INFO", "ENTRO ACA 444");
 
             }
@@ -103,6 +108,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         /*LatLng sydney = new LatLng(-34, 151);
         mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));*/
+    }
+
+    public void addNewZone(LocationForm locationForm){
+        LatLng nZone = new LatLng(locationForm.getLatitude(), locationForm.getLongitude());
+        mMap.addMarker(new MarkerOptions().position(nZone).title(locationForm.getName()));
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(nZone));
     }
 
     @SuppressLint("MissingPermission")
