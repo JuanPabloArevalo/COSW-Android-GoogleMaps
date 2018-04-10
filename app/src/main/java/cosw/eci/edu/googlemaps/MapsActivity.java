@@ -44,21 +44,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private final LocationRequest locationRequest = new LocationRequest();
     private TextView address;
     public static final String EXTRA_MESSAGE = "com.eci.edu.googlrmaps.ADDFORM";
-
-
+    private boolean isNewMarker = false;
+    private LocationForm locationForm;
+    public static final int INTENT_FORM = 1;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         address = (TextView) findViewById(R.id.address);
-
-
-
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-
         //Configure Google Maps API Objects
         googleApiClient = new GoogleApiClient.Builder( this ).addConnectionCallbacks( this ).addOnConnectionFailedListener( this ).addApi( LocationServices.API ).build();
         locationRequest.setInterval( 10000 );
@@ -70,21 +66,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     public void addNewLocationForm(View view) {
         Intent intent = new Intent(this, AddFormLocation.class);
-        startActivityForResult(intent,1);
+        startActivityForResult(intent,INTENT_FORM);
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        Log.i("INFO", "ENTRO ACA");
         if (resultCode == RESULT_OK) {
             switch (requestCode) {
-                case 1:
-                    LocationForm lf = (LocationForm) data.getExtras().get(AddFormLocation.LOCATION_FORM);
-                    addNewZone(lf);
-                    Log.i("INFO", lf.getName());
-                    Log.i("INFO", "ENTRO ACA 444");
-
+                case INTENT_FORM:
+                    isNewMarker = true;
+                    locationForm = (LocationForm) data.getExtras().get(AddFormLocation.LOCATION_FORM);
             }
         }
     }
@@ -104,31 +96,38 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         showMyLocation();
-        // Add a marker in Sydney and move the camera
-        /*LatLng sydney = new LatLng(-34, 151);
-        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));*/
     }
 
-    public void addNewZone(LocationForm locationForm){
+    public void addNewZoneInMap(LocationForm locationForm){
         LatLng nZone = new LatLng(locationForm.getLatitude(), locationForm.getLongitude());
         mMap.addMarker(new MarkerOptions().position(nZone).title(locationForm.getName()));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(nZone));
+
+        /*LatLng sydney = new LatLng(-34, 151);
+        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+        mMap.getMyLocation();
+        Log.i("INFO", "ENTRO ACA 7777");*/
     }
 
     @SuppressLint("MissingPermission")
     public void showMyLocation() {
+        //Log.i("INFO", "ENTRO ACA 888");
         if ( mMap != null ) {
-            String[] permissions = { android.Manifest.permission.ACCESS_FINE_LOCATION,android.Manifest.permission.ACCESS_COARSE_LOCATION };
-            if ( hasPermissions( this, permissions ) ) {
-                mMap.setMyLocationEnabled( true );
-                Location lastLocation = LocationServices.FusedLocationApi.getLastLocation( googleApiClient );
-                if ( lastLocation != null ) {
-                    addMarkerAndZoom( lastLocation, "My LocationForm", 15 );
-                }
+            if(isNewMarker){
+                addNewZoneInMap(locationForm);
             }
             else {
-                ActivityCompat.requestPermissions( this, permissions, ACCESS_LOCATION_PERMISSION_CODE );
+                String[] permissions = {android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION};
+                if (hasPermissions(this, permissions)) {
+                    mMap.setMyLocationEnabled(true);
+                    Location lastLocation = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
+                    if (lastLocation != null) {
+                        addMarkerAndZoom(lastLocation, "My LocationForm", 15);
+                    }
+                } else {
+                    ActivityCompat.requestPermissions(this, permissions, ACCESS_LOCATION_PERMISSION_CODE);
+                }
             }
         }
     }
