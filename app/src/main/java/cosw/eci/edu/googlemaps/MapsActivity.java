@@ -47,6 +47,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private boolean isNewMarker = false;
     private LocationForm locationForm;
     public static final int INTENT_FORM = 1;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -225,7 +226,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             } );
             Intent intent = new Intent( this, FetchAddressIntentService.class );
             intent.putExtra( FetchAddressIntentService.RECEIVER, addressResultReceiver );
-            intent.putExtra( FetchAddressIntentService.LOCATION_DATA_EXTRA, lastLocation );
+            if(isNewMarker){
+                Location newLocation = new Location("New Location");
+                newLocation.setLatitude(locationForm.getLatitude());
+                newLocation.setLongitude((locationForm.getLongitude()));
+                intent.putExtra( FetchAddressIntentService.LOCATION_DATA_EXTRA, newLocation );
+            }
+            else {
+                intent.putExtra(FetchAddressIntentService.LOCATION_DATA_EXTRA, lastLocation);
+            }
             startService( intent );
         }
     }
