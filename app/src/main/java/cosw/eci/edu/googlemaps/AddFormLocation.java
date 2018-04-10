@@ -1,5 +1,7 @@
 package cosw.eci.edu.googlemaps;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -18,6 +20,10 @@ public class AddFormLocation extends AppCompatActivity {
         if(validateForm()){
 
         }
+        Uri dato = Uri.parse("content://contactos/1");
+        Intent resultado = new Intent(null, dato);
+
+        setResult(RESULT_OK, resultado);
         finish();
     }
 

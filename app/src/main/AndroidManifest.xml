@@ -44,7 +44,10 @@
             android:name=".FetchAddressIntentService"
             android:exported="false" />
 
-        <activity android:name=".AddFormLocation"></activity>
+        <activity android:name=".AddFormLocation">
+
+
+        </activity>
     </application>
 
 </manifest>

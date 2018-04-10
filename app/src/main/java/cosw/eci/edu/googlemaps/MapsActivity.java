@@ -68,8 +68,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     public void addNewLocation(View view) {
         Intent intent = new Intent(this, AddFormLocation.class);
-        intent.setAction(Intent.ACTION_GET_CONTENT);
         startActivityForResult(intent,1);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        Log.i("INFO", "ENTRO ACA");
+        if (resultCode == RESULT_OK) {
+            switch (requestCode) {
+                case 1:
+                    Log.i("INFO", "ENTRO ACA 444");
+
+            }
+        }
     }
 
 
@@ -208,17 +220,5 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        Log.i("INFO", "ENTRO ACA");
 
-        if (resultCode == RESULT_OK) {
-            switch (requestCode) {
-                case 1:
-                    Log.i("INFO", "ENTRO ACA 444");
-
-            }
-        }
-    }
 }
